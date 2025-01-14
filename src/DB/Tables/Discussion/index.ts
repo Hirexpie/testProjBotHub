@@ -8,9 +8,7 @@ export const checkDiscussion = () => {
                 feedbackId INTEGER NOT NULL,    
                 text TEXT NOT NULL,              
                 createdAt TIMESTAMP,   
-                updatedAt TIMESTAMP,   
-                FOREIGN KEY (userId) REFERENCES users(userId),
-                FOREIGN KEY (feedbackId) REFERENCES feedback(feedbackId)
+                updatedAt TIMESTAMP
             );
 
         `)

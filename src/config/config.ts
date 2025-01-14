@@ -29,6 +29,7 @@ interface config {
     http: http
     postgreaSQL: postgreaSQL
     redis: redis
+    jwt: string
 }
 
 
@@ -39,3 +40,4 @@ const config = yaml.load(fileContent) as config;
 export const http:http = config.http
 export const postgreaSQL:postgreaSQL = config.postgreaSQL
 export const redis:redis = config.redis
+export const jwtkey:string = config.jwt

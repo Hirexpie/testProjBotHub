@@ -12,9 +12,7 @@ export const checkFeetbacs = () => {
                 statusId INTEGER,      
                 userId INTEGER NOT NULL,        
                 createdAt TIMESTAMP DEFAULT NOW(), 
-                updatedAt TIMESTAMP DEFAULT NOW(), 
-                CONSTRAINT fk_category FOREIGN KEY (categoryId) REFERENCES category (categoryId),
-                CONSTRAINT fk_status FOREIGN KEY (statusId) REFERENCES status (statusId)
+                updatedAt TIMESTAMP DEFAULT NOW()
             );
         `)
         console.log('feedback table created')
@@ -63,12 +61,4 @@ export const checkCategory = (categoryes:string[]) => {
         })
         
     })
-
-  
-
-
-    
-
-        
-
 }

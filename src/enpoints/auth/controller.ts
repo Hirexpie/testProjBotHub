@@ -5,11 +5,12 @@ import { IUserSQL } from '../../DB/Tables/users/interface';
 import jwt from 'jsonwebtoken'
 import nodemailer from 'nodemailer'
 import { passResetQueue } from '../../redis/passResetQueue';
+import { jwtkey } from '../../config/config';
 
 const getToken = (userId:number):string => {
     return jwt.sign({
         id:userId
-    },'privat',
+    },jwtkey,
     {
         expiresIn:'30m'
     })
