@@ -1,0 +1,19 @@
+http:
+  port: 4040
+  host: 'localhost'
+
+postgreaSQL:
+  user: 'anchik'
+  host: 'localhost'           
+  database: 'FeedbackDB'   
+  password: 'ggftftghgh' 
+  port: 5432
+  filters: 
+    status: ['активен','Не активен','Обсуждается']
+    category: ['Другое','Баг','UI','Функциональность','Дороботка']
+
+redis:
+  host: '127.0.0.1'
+  port: 6379
+
+jwt: '' 
