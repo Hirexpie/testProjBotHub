@@ -3,6 +3,12 @@ import { verifyRequest } from "../checkAuth";
 import connect from '../../DB/index'
 import { IFeedbackSQL } from '../../DB/Tables/Feetback/interface'
 // import { title } from "process";
+interface IResponsFeedback extends IFeedbackSQL {
+    status:string
+    category:string
+}
+
+
 class FeedbackController {
     public async create(req:verifyRequest,res:Response) {
         try {
@@ -107,9 +113,12 @@ class FeedbackController {
     public async getAll(req:Request,res:Response) {
 
         try {
-            let page:any = req.query.page || 0
-            let status = req.query.status || 0
-            let category = req.query.category || 0
+            const page:any = req.query.page || 0
+            const status = req.query.status || 0
+            const category = req.query.category || 0
+            const isGoodMore = req.query.isGoodMore || null
+            const isOldDate = req.query.isOldDate || false
+
 
 
 
@@ -123,20 +132,63 @@ class FeedbackController {
             // }
 
             let sqlQuery = `select * from feedback `
-
+            let isFirstFilter = true
             if (statusData.rows.length >= 1) {
                 sqlQuery+= `where statusid = ${status} `
-                status = 1
+                isFirstFilter = false
             }
             if (categoryData.rows.length >= 1) {
-                sqlQuery+= status == 1 ? `and categoryid = ${category} ` :  `where categoryid = ${category} `
-                category = 1
+                sqlQuery+= isFirstFilter ? `and categoryid = ${category} ` :  `where categoryid = ${category} `
+                isFirstFilter = false
             }
-            sqlQuery += `ORDER BY createdat desc LIMIT 100 offset ${100 * page}`
+            isFirstFilter = true
+
+            if (isOldDate) {
+                sqlQuery+=`ORDER BY createdat asc `
+                isFirstFilter = false
+            }
+            else {
+                sqlQuery+=`ORDER BY createdat desc `
+                isFirstFilter = false
+            }
+
+            if (isGoodMore) {
+                sqlQuery+= isFirstFilter ? `ORDER BY goodcount desc ` : `, goodcount desc `
+                isFirstFilter = false
+            }
+            else {
+                sqlQuery+= isFirstFilter ? `ORDER BY badcount desc ` : `, badcount desc `
+                isFirstFilter = false
+            }
+
+            sqlQuery += `LIMIT 100 offset ${100 * page}`
             console.log(sqlQuery)
             const { rows } = await connect.query(sqlQuery)
+            const feedbacks:IFeedbackSQL[] = rows
+            const data:IResponsFeedback[] = []
+
+
+
+            for (const feedback of feedbacks) {
+                const statusData = await connect.query(`select * from status where statusid = ${feedback.statusid}`)
+                const categoryData = await connect.query(`select * from category where categoryid = ${feedback.categoryid}`)
+                let status = 'Не извесно'
+                let category = 'Не извесно'
+                if (statusData.rows.length >= 1) {
+                    status = statusData.rows[0].val
+                }
+                if (categoryData.rows.length >= 1) {
+                    category = categoryData.rows[0].val
+                }
+                data.push({
+                    ...feedback,
+                    status,
+                    category,
+                })
+            }
+
             
-            res.json({data:rows})
+            res.json({data:data})
 
 
 
@@ -155,8 +207,27 @@ class FeedbackController {
             // console.log("cat="+category)
 
             const { rows } = await connect.query(`select * from feedback where userid = ${userId}`)
+            const feedbacks:IFeedbackSQL[] = rows
+            const data:IResponsFeedback[] = []
+            for (const feedback of feedbacks) {
+                const statusData = await connect.query(`select * from status where statusid = ${feedback.statusid}`)
+                const categoryData = await connect.query(`select * from category where categoryid = ${feedback.categoryid}`)
+                let status = 'Не извесно'
+                let category = 'Не извесно'
+                if (statusData.rows.length >= 1) {
+                    status = statusData.rows[0].val
+                }
+                if (categoryData.rows.length >= 1) {
+                    category = categoryData.rows[0].val
+                }
+                data.push({
+                    ...feedback,
+                    status,
+                    category,
+                })
+            }
 
-            res.json(rows)
+            res.json(data)
         }
         catch (e) {
             console.log(e)
@@ -184,10 +255,11 @@ class FeedbackController {
                 category = categoryData.rows[0].val
             }
 
-            const data = {
+            const data:IResponsFeedback = {
                 ...feetback,
                 status,
                 category,
+
             }
             res.json({data:data})
 
@@ -195,6 +267,56 @@ class FeedbackController {
         catch (e) {
             res.status(400).json(e)
         } 
+    }
+
+    public async setVote(req:verifyRequest,res:Response) {
+        try {
+            const { isGood } = req.body
+            const userId = req.userId 
+            const feedbackId = req.params.id.replace(':','')
+            const { rows } = await connect.query(`select * from feedback where feedbackId = ${feedbackId}`)
+            if (rows.length <= 0) {
+                res.status(404).json({message:'такого фидбека не существует'})
+                return
+            }
+            console.log(rows[0].userid)
+            if (rows[0].userid != userId) {
+                res.status(400).json({message:'пойзашла ошибка'})
+                return
+            }
+            const isVote = await connect.query(`select * from vote where userid = ${userId} and feedbackid = ${feedbackId}`)
+
+            if (isVote.rows.length >= 1) {
+                connect.query(`update table vote set isgood = ${isGood} where voteid = ${isVote.rows[0].voteid}`)
+                if (isGood) {
+                    connect.query(`update table feedback set goodcount = ${rows[0].goodcount++} where feedbackid = ${feedbackId}`)
+                    connect.query(`update table feedback set badcount = ${rows[0].badcount--} where feedbackid = ${feedbackId}`)
+                }
+                else {
+                    connect.query(`update table feedback set goodcount = ${rows[0].goodcount--} where feedbackid = ${feedbackId}`)
+                    connect.query(`update table feedback set badcount = ${rows[0].badcount++} where feedbackid = ${feedbackId}`)
+                }
+
+                res.json({message:'голос обновлен'})
+                return
+            }
+
+            connect.query(`insert into 
+                vote(userid,feedbackid,isgood) 
+                values(${userId},${feedbackId},${isGood})`)
+            if (isGood) {
+                connect.query(`update table feedback set goodcount = ${rows[0].goodcount++} where feedbackid = ${feedbackId}`)
+            }
+            else {
+                connect.query(`update table feedback set badcount = ${rows[0].badcount++} where feedbackid = ${feedbackId}`)
+            }
+
+            res.json({message:'голос создан'})
+
+        }
+        catch (e) {
+
+        }
     }
 }
 

@@ -25,10 +25,16 @@ interface redis {
     port: number
 }
 
+interface resetPass {
+    email:string
+    password:string
+}
+
 interface config {
     http: http
     postgreaSQL: postgreaSQL
     redis: redis
+    resetPass: resetPass
     jwt: string
 }
 
@@ -41,3 +47,4 @@ export const http:http = config.http
 export const postgreaSQL:postgreaSQL = config.postgreaSQL
 export const redis:redis = config.redis
 export const jwtkey:string = config.jwt
+export const emailConfig:resetPass = config.resetPass 

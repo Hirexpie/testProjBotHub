@@ -12,7 +12,7 @@ rout.post('/create',checkauth,controller.create)
 rout.delete('/:id',checkauth,controller.delete)
 rout.patch('/:id',checkauth,controller.update)
 
-
+rout.post('/vote/:feedbackId',checkauth,controller.setVote)
 rout.get('/User',checkauth,controller.getOneUser)
 rout.get('/all',controller.getAll)
 rout.get('/:id',checkauth,controller.getOne)

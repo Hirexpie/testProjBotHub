@@ -5,7 +5,7 @@ import { IUserSQL } from '../../DB/Tables/users/interface';
 import jwt from 'jsonwebtoken'
 import nodemailer from 'nodemailer'
 import { passResetQueue } from '../../redis/passResetQueue';
-import { jwtkey } from '../../config/config';
+import { jwtkey,emailConfig } from '../../config/config';
 
 const getToken = (userId:number):string => {
     return jwt.sign({
@@ -14,6 +14,12 @@ const getToken = (userId:number):string => {
     {
         expiresIn:'30m'
     })
+}
+
+interface IredisCode {
+    userId:number
+    code:number
+    email:string
 }
 
 
@@ -34,7 +40,7 @@ class AuthController {
             await connect.query(`insert into 
                 users(username,nikname,passHash,email,avatar,createAt,updateAt) 
                 values('${username}','${nikname}','${passHash}','${email}','${avatar}',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`)
-            res.json(rows)
+            res.json({message:'вы зарегестрировались'})
         }
         catch (e) {
             // console.log(`register error | ${new Date} | ${e}`)
@@ -87,37 +93,44 @@ class AuthController {
                 res.json({message:'не правельная почта'})
                 return
             }
+            let code = Math.floor(Math.random() * 900000) + 100000;
 
+            const jobs = await passResetQueue.getJobs(['waiting', 'active', 'delayed', 'completed', 'failed']);
 
-            const code = Math.floor(100000 + Math.random() * 900000); 
+            for (let job of jobs) {
+                while (job.data.code == code) {
+                    code = Math.floor(Math.random() * 900000) + 100000;
+                }
+                if (job.data.email === email) {
+                    await job.remove();
+                }
+            }
             passResetQueue.add({
                 code,
                 userid:rows[0].userid,
-                email
+                email,
             })
 
             const transporter = nodemailer.createTransport({
-                // host: 'smtp.gmail.com',
-                // port: 465,
-                // secure: true,
-                service: 'gmail', 
+                host: 'smtp.mail.ru',
+                port: 465, // или 587
+                secure: true,
                 auth: {
-                  user: 'feetback27@gmail.com',
-                  pass: 'newpass888',       
+                  user: emailConfig.email,
+                  pass: emailConfig.password,       
                 },
             });
-            // transporter.verify((err) => {
-            //     if (err) console.log(err)
-            // })
             const mailOptions = {
-                from: '"feetback" <feetback27@gmail.com>',       
-                to: 'bdrik61@gmail.com',    
+                from: emailConfig.email,       
+                to: email,    
                 subject: 'смена пароля',      
                 text: `здраствуте вот ваш код:${code}`,       
             };
-            
-            transporter.sendMail(mailOptions)
-            // console.log(info)
+            await transporter.sendMail(mailOptions).catch((e) => {
+                console.log(e)
+                console.log('почта не работает!!!')
+            })
+        
             res.json({code:code})
         }
         catch (e) {
@@ -127,11 +140,53 @@ class AuthController {
     } 
 
     public async isCodeResetPass(req:Request,res:Response) {
+        try {
+            const {code,email} = req.body
+            const jobs = await passResetQueue.getJobs(['waiting', 'active', 'completed']);
+            let data:IredisCode 
+            for (let job of jobs) {
+                if (job.data.email === email) {
+                    data = job.data
+                    if (data.code == code) {
+                        // job.remove()
+                        res.json({iscorect:true})
+                    }
+                    break;  
+                }
+            }
+            
 
+        }
+        catch (e) {
+            console.log(e)
+            res.status(400).json(e)
+        }
     }
 
     public async ResetPass(req:Request,res:Response) {
-    
+        try {
+            const {code,email,newPass} = req.body
+            const jobs = await passResetQueue.getJobs(['waiting', 'active', 'completed']);
+            let data:IredisCode 
+            for (let job of jobs) {
+                if (job.data.email === email) {
+                    data = job.data
+                    if (data.code == code) {
+                        const salt = bcrypt.genSaltSync(10)
+                        const passhash = bcrypt.hashSync(newPass,salt)
+                        connect.query(`update users set passhash = ${passhash}`)
+                        job.remove()
+                        res.json({message:'пароль успешно изменен'})
+                        return;
+                    }
+                    res.json({message:'не правельны код'})
+                }
+            }
+            res.json({message:'ошибка'})
+        }
+        catch (e) {
+            res.status(400).json(e)
+        }
     }
 }
 

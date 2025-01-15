@@ -16,4 +16,8 @@ redis:
   host: '127.0.0.1'
   port: 6379
 
+resetPass:
+  email: 'feedback-2025@mail.ru'
+  password: '2ttLuV2MRHYyGZkuXk88'
+  
 jwt: 'privat' 

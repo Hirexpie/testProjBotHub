@@ -2,6 +2,7 @@ import { checkDiscussion } from "./Tables/Discussion"
 import { checkCategory, checkFeetbacs, checkStatus } from "./Tables/Feetback"
 import { checkUsers } from "./Tables/users"
 import { postgreaSQL } from "../config/config"
+import { checkVots } from "./Tables/Vote"
 
 export const initDB = () => {
     checkUsers()
@@ -9,4 +10,5 @@ export const initDB = () => {
     checkStatus(postgreaSQL.filters.status)
     checkFeetbacs()
     checkDiscussion()
+    checkVots()
 }
