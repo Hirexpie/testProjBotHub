@@ -3,11 +3,11 @@ export interface IFeedback {
     description:string
     goodcount:number
     badcount:number
-    categoryid:string
-    statusid:string
+    categoryid:number
+    statusid:number
     userid:number
-    createat:Date
-    updateat:Date
+    createadt:Date
+    updateadt:Date
 }
 
 export interface IFeedbackSQL extends IFeedback {

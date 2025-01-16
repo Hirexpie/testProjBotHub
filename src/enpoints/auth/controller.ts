@@ -71,9 +71,7 @@ class AuthController {
             }
             // console.log(user.userId)
             const token = getToken(user.userid)
-            res.json({token:token,
-                user:user
-            })
+            res.json({token:token})
 
         }
         catch (e) {
@@ -136,7 +134,7 @@ class AuthController {
             res.json({code:code})
         }
         catch (e) {
-            console.log(e)
+            // console.log(e)
             res.status(400).json(e)
         }
     } 
@@ -163,7 +161,7 @@ class AuthController {
 
         }
         catch (e) {
-            console.log(e)
+            // console.log(e)
             res.status(400).json(e)
         }
     }

@@ -21,20 +21,20 @@ class FeedbackController {
             }
             const body = req.body as reqBody
             const userId = req.userId   
-            console.log(userId)
+            // console.log(userId)
             
-            // for (let i = 0;i< 1000;i++){ // для теста
+            for (let i = 0;i< 1000;i++){ // для теста
 
                 connect.query(`insert into 
                     feedback(title,description,categoryId,statusId,userId,createdAt,updatedAt)
                     values('${body.title}','${body.description}','${body.categoryId}','${body.statusId}',${userId},CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)
                 `)
-            // }
+            }
             
             res.json({message:'фидбек добавлен'})
         }    
         catch (e) {
-            console.log(e)
+            // console.log(e)
             res.status(400).json(e)
         }
     }
@@ -60,7 +60,7 @@ class FeedbackController {
 
         }
         catch (e) {
-            console.log(e)
+            // console.log(e)
             res.status(400).json(e)
         }
     }
@@ -96,17 +96,17 @@ class FeedbackController {
                 body.description = old.description
             }
             if (body.categoryid == 0) {
-                body.categoryid = parseInt(old.categoryid)
+                body.categoryid = old.categoryid
             }
             if (body.statusid == 0) {
-                body.statusid = parseInt(old.statusid)
+                body.statusid = old.statusid
             }
             
             connect.query(`update feedback set title = '${body.title}',description = '${body.description}', categoryid = ${body.categoryid}, statusid = ${body.statusid}, updatedat = CURRENT_TIMESTAMP where feedbackid = ${feedbackId} `)
             res.json({message:'данные обнавлены'})
         }
         catch (e) {
-            res.json(e)
+            // res.json(e)
             console.log(e)
         }
     }
@@ -153,7 +153,10 @@ class FeedbackController {
                 isFirstFilter = false
             }
 
-            if (isGoodMore) {
+            if (isGoodMore == null) {
+
+            }
+            else if (isGoodMore) {
                 sqlQuery+= isFirstFilter ? `ORDER BY goodcount desc ` : `, goodcount desc `
                 isFirstFilter = false
             }
@@ -163,13 +166,13 @@ class FeedbackController {
             }
 
             sqlQuery += `LIMIT 100 offset ${100 * page}`
-            console.log(sqlQuery)
+            // console.log(sqlQuery)
             const { rows } = await connect.query(sqlQuery)
             const feedbacks:IFeedbackSQL[] = rows
             const data:IResponsFeedback[] = []
 
 
-
+            console.log(sqlQuery)
             for (const feedback of feedbacks) {
                 const statusData = await connect.query(`select * from status where statusid = ${feedback.statusid}`)
                 const categoryData = await connect.query(`select * from category where categoryid = ${feedback.categoryid}`)
@@ -203,7 +206,7 @@ class FeedbackController {
 
         }
         catch (e) {
-            console.log(e)
+            // console.log(e)
             res.json(e)
         }
     }
@@ -245,7 +248,7 @@ class FeedbackController {
             res.json(data)
         }
         catch (e) {
-            console.log(e)
+            // console.log(e)
             res.status(400).json(e)
         }
     }
@@ -338,7 +341,7 @@ class FeedbackController {
 
         }
         catch (e) {
-
+            res.json(e)
         }
     }
 }
