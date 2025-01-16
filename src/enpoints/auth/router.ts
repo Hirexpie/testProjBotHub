@@ -10,7 +10,7 @@ rout.post('/login', controller.login)
 
 rout.post('/getCodeReset', controller.getCodeResetPass)
 rout.post('/isCode', controller.isCodeResetPass)
-rout.post('/resrtPass', controller.ResetPass)
+rout.post('/resetPass', controller.ResetPass)
 
 
 export default rout

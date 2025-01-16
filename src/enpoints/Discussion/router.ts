@@ -1,12 +1,12 @@
 import { Router } from 'express'
-import { checkauth } from '../checkAuth'
+import { checkToken } from '../checkAuth'
 import controller from './controller'
 
 const rout = Router()
 
-rout.post('/:feedbackid',checkauth,controller.create)
-rout.patch('/:discussionid',checkauth,controller.update)
-rout.delete('/:discussionid',checkauth,controller.delete)
+rout.post('/:feedbackid',checkToken,controller.create)
+rout.patch('/:discussionid',checkToken,controller.update)
+rout.delete('/:discussionid',checkToken,controller.delete)
 
 
 rout.get('/:feedbackid',controller.getAll)

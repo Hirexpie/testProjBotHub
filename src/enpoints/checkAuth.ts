@@ -5,7 +5,7 @@ export interface verifyRequest extends Request {
   userId?: number;
 }
 
-export const checkauth = (req: verifyRequest, res: Response, next: NextFunction): void => {
+export const checkToken = (req: verifyRequest, res: Response, next: NextFunction): void => {
     const token = (req.headers.authorization || '').replace(/Bearer\s?/, '');
 
     
@@ -23,3 +23,24 @@ export const checkauth = (req: verifyRequest, res: Response, next: NextFunction)
         return 
     }
 };
+
+export const checkAuth = (req: verifyRequest, res: Response, next: NextFunction) => {
+    const token = (req.headers.authorization || '').replace(/Bearer\s?/, '');
+    if (!token) {
+        req.userId = undefined
+        next();
+        return
+    }
+    try {
+        const decoded = jwt.decode(token) as {id:number};
+        req.userId = decoded.id
+        
+        next();
+    }
+    catch {
+        res.status(401).json({ message: 'Ошибка аутентификации' });
+        return 
+    }
+    
+   
+}

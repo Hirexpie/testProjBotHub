@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import controller from './controller'
-import { checkauth } from '../checkAuth';
+import { checkToken,checkAuth } from '../checkAuth';
 
 const rout = Router();
 
@@ -8,14 +8,14 @@ const rout = Router();
 // rout.post('/login', controller.login)
 
 
-rout.post('/create',checkauth,controller.create)
-rout.delete('/:id',checkauth,controller.delete)
-rout.patch('/:id',checkauth,controller.update)
+rout.post('/create',checkToken,controller.create)
+rout.delete('/:feedbackId',checkToken,controller.delete)
+rout.patch('/:feedbackId',checkToken,controller.update)
 
-rout.post('/vote/:feedbackId',checkauth,controller.setVote)
-rout.get('/User',checkauth,controller.getOneUser)
-rout.get('/all',controller.getAll)
-rout.get('/:id',checkauth,controller.getOne)
+rout.post('/vote/:feedbackId',checkToken,controller.setVote)
+rout.get('/User',checkToken,controller.getOneUser)
+rout.get('/all',checkAuth,controller.getAll)
+rout.get('/:feedbackId',checkAuth,controller.getOne)
 
 
 

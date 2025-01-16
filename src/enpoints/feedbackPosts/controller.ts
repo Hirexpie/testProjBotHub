@@ -6,6 +6,7 @@ import { IFeedbackSQL } from '../../DB/Tables/Feetback/interface'
 interface IResponsFeedback extends IFeedbackSQL {
     status:string
     category:string
+    isGood: boolean | null
 }
 
 
@@ -41,7 +42,7 @@ class FeedbackController {
     public async delete(req:verifyRequest,res:Response) {
         try {
             const userId = req.userId 
-            const feedbackId = req.params.id.replace(':','')
+            const feedbackId = req.params.feedbackId.replace(':','')
             const { rows } = await connect.query(`select * from feedback where feedbackId = ${feedbackId}`)
             if (rows.length <= 0) {
                 res.status(404).json({message:'такого фидбека не существует'})
@@ -74,7 +75,7 @@ class FeedbackController {
             }
             const body = req.body as reqBody
             const userId = req.userId 
-            const feedbackId = req.params.id.replace(':','')
+            const feedbackId = req.params.feedbackId.replace(':','')
             const { rows } = await connect.query(`select * from feedback where feedbackId = ${feedbackId}`)
             if (rows.length <= 0) {
                 res.status(404).json({message:'такого фидбека не существует'})
@@ -110,7 +111,7 @@ class FeedbackController {
         }
     }
 
-    public async getAll(req:Request,res:Response) {
+    public async getAll(req:verifyRequest,res:Response) {
 
         try {
             const page:any = req.query.page || 0
@@ -120,7 +121,7 @@ class FeedbackController {
             const isOldDate = req.query.isOldDate || false
 
 
-
+            const userId = req.userId
 
 
             const statusData = await connect.query(`select * from status where statusid = ${status}`)
@@ -180,10 +181,18 @@ class FeedbackController {
                 if (categoryData.rows.length >= 1) {
                     category = categoryData.rows[0].val
                 }
+                let isGood = null;
+                if (userId) {
+                    const voteData = await connect.query(`select * from vote where feedbackid = ${feedback.feedbackid} and userid = ${userId}`)
+                    if (voteData.rows.length <= 0) {
+                        isGood = voteData.rows[0].isGood
+                    }
+                }
                 data.push({
                     ...feedback,
                     status,
                     category,
+                    isGood:isGood
                 })
             }
 
@@ -220,10 +229,16 @@ class FeedbackController {
                 if (categoryData.rows.length >= 1) {
                     category = categoryData.rows[0].val
                 }
+                const voteData = await connect.query(`select * from vote where feedbackid = ${feedback.feedbackid} and userid = ${userId}`)
+                let isGood = null;
+                if (voteData.rows.length <= 0) {
+                    isGood = voteData.rows[0].isGood
+                }
                 data.push({
                     ...feedback,
                     status,
                     category,
+                    isGood:isGood
                 })
             }
 
@@ -235,9 +250,10 @@ class FeedbackController {
         }
     }
 
-    public async getOne(req:Request,res:Response) {
+    public async getOne(req:verifyRequest,res:Response) {
         try {
-            const feedbackId = req.params.id.replace(':','')
+            const userId = req.userId
+            const feedbackId = req.params.feedbackId.replace(':','')
             const {rows} = await connect.query(`select * from feedback where feedbackid = ${feedbackId}`)
             if (rows.length<=0) {
                 res.status(404).json({message:'такого фидбека не существует'})
@@ -254,12 +270,19 @@ class FeedbackController {
             if (categoryData.rows.length >= 1) {
                 category = categoryData.rows[0].val
             }
+            let isGood = null;
+            if (userId) {
 
+                const voteData = await connect.query(`select * from vote where feedbackid = ${feedbackId} and userid = ${userId}`)
+                if (voteData.rows.length <= 0) {
+                    isGood = voteData.rows[0].isGood
+                }
+            }
             const data:IResponsFeedback = {
                 ...feetback,
                 status,
                 category,
-
+                isGood:isGood
             }
             res.json({data:data})
 

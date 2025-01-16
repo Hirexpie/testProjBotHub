@@ -71,7 +71,9 @@ class AuthController {
             }
             // console.log(user.userId)
             const token = getToken(user.userid)
-            res.json({token:token})
+            res.json({token:token,
+                user:user
+            })
 
         }
         catch (e) {
@@ -151,9 +153,12 @@ class AuthController {
                         // job.remove()
                         res.json({iscorect:true})
                     }
+                    res.json({iscorect:false})
+
                     break;  
                 }
             }
+            res.json({message:'не правельная почта'})
             
 
         }
