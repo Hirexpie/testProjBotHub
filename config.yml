@@ -1,6 +1,5 @@
 http:
   port: 4040
-  host: 'localhost'
 
 postgreaSQL:
   user: 'postgres'
@@ -19,5 +18,5 @@ redis:
 resetPass:
   email: 'feedback-2025@mail.ru'
   password: '2ttLuV2MRHYyGZkuXk88'
-  
+
 jwt: 'privat' 
